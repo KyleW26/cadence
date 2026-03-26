@@ -6,3 +6,106 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model StravaToken {
+  id String @id @default(cuid())
+  userId   String
+  accessToken String
+  refreshToken String
+  expiresAt DateTime
+  modifiedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model StravaActivity {
+  id String @id @default(cuid())
+  userId String
+  stravaId BigInt @unique
+  activityName String
+  activityType String
+  distance Float
+  movingTime Int?
+  elapsedTime Int
+  startDate DateTime
+  averageSpeed Float?
+  maxSpeed Float?
+  elevation Float?
+  averageHR Float?
+  maxHR Float?
+  createdAt  DateTime @default(now())
+}
+
+model GymProgramme {
+  id  String @id @default(cuid())
+  userId String
+  name String
+  description String?
+  isActive Boolean @default(false)
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  workouts    Workout[]
+}
+
+model Workout {
+  id  String @id @default(cuid())
+  gymProgrammeId String
+  name String
+  description String?
+  dayOfWeek Int?
+  order Int
+  createdAt  DateTime @default(now())
+  modifiedAt DateTime @updatedAt
+
+  programme GymProgramme @relation(fields: [gymProgrammeId], references: [id], onDelete: Cascade)
+  exercises   WorkoutExercise[]
+  workoutLogs WorkoutLog[]
+}
+
+model Exercise {
+  id String @id @default(cuid())
+  name String
+  description String?
+  muscleGroup String?
+  createdAt  DateTime @default(now())
+
+  workoutExercises WorkoutExercise[]
+  workoutLogs SetLog[]
+}
+
+model WorkoutExercise {
+  id String @id @default(cuid())
+  workoutId String
+  exerciseId String
+  targetSets Int
+  targetReps Int
+  targetWeight Float?
+  order Int
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+}
+
+model WorkoutLog {
+  id String @id @default(cuid())
+  userId String
+  workoutId String
+  completedAt DateTime @default(now())
+  notes String?
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  setLogs SetLog[]
+}
+
+model SetLog {
+  id String @id @default(cuid())
+  workoutLogId String
+  exerciseId String
+  setNumber Int
+  reps Int?
+  weight Float?
+  notes String?
+
+  workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+}
